@@ -1,8 +1,5 @@
 <?php
 
-// Innodite\LaravelModuleMaker\Commands\SetupModuleMakerCommand.php
-// Código corregido para el comando de configuración del paquete.
-
 namespace Innodite\LaravelModuleMaker\Commands;
 
 use Illuminate\Console\Command;
@@ -55,8 +52,11 @@ class SetupModuleMakerCommand extends Command
         // Publica los stubs y los archivos de configuración de ejemplo
         $this->publishStubsAndConfig($configPath);
 
+        // NUEVO: Modifica el DatabaseSeeder automáticamente
+        $this->modifyDatabaseSeeder();
+
         $this->info("\n🎉 ¡Configuración completa! Ahora puedes personalizar los stubs y el archivo de configuración en 'Modules/module-maker-config'.");
-        $this->info("Para generar un módulo dinámico, edita 'post.json' y ejecuta: php artisan innodite:make-module --config=post.json");
+        $this->info("Para generar un módulo dinámico, edita 'blog.json' y ejecuta: php artisan innodite:make-module Blog --config=blog.json");
     }
 
     /**
@@ -92,9 +92,9 @@ class SetupModuleMakerCommand extends Command
         }
 
         // Copia los archivos de configuración de ejemplo
-        $filesToCopy = ['post.json', 'blog.json','core.json','sales.json','shop.json'];
+        $filesToCopy = ['post.json', 'blog.json', 'core.json', 'sales.json', 'shop.json'];
         foreach ($filesToCopy as $file) {
-            $sourceFile = "{$packageStubsPath}/{$file}";
+            $sourceFile      = "{$packageStubsPath}/{$file}";
             $destinationFile = "{$configPath}/{$file}";
 
             if (File::exists($sourceFile)) {
@@ -104,5 +104,64 @@ class SetupModuleMakerCommand extends Command
                 $this->error("El archivo de configuración de ejemplo '{$file}' no existe en: '{$sourceFile}'.");
             }
         }
+
+        // Publica contexts.json — configura los contextos del proyecto (Central, Shared, tenants)
+        $contextsSource      = "{$packageStubsPath}/contexts.json";
+        $contextsDestination = "{$configPath}/contexts.json";
+
+        if (! File::exists($contextsDestination)) {
+            File::copy($contextsSource, $contextsDestination);
+            $this->info("✅ contexts.json publicado en: '{$contextsDestination}'.");
+            $this->info("   👉 Edita este archivo para configurar los contextos de tu proyecto.");
+        } else {
+            $this->warn("   contexts.json ya existe. No se sobreescribió. Edítalo manualmente si necesitas cambios.");
+        }
+    }
+    
+    /**
+     * Modifica el archivo DatabaseSeeder.php para incluir los seeders de los módulos.
+     *
+     * @return void
+     */
+    protected function modifyDatabaseSeeder(): void
+    {
+        $seederPath = database_path('seeders/DatabaseSeeder.php');
+
+        if (!File::exists($seederPath)) {
+            $this->error("No se encontró el archivo DatabaseSeeder.php. Por favor, asegúrate de que el proyecto está inicializado correctamente.");
+            return;
+        }
+
+        $seederContent = File::get($seederPath);
+        $callLine = "        \$this->call(InnoditeModuleSeeder::class);";
+        $useStatement = "use Innodite\\LaravelModuleMaker\\Database\\Seeders\\InnoditeModuleSeeder;";
+        
+        // Revisa si ya existe el use statement o la llamada para no duplicar
+        if (str_contains($seederContent, $useStatement) && str_contains($seederContent, $callLine)) {
+            $this->warn("El archivo DatabaseSeeder.php ya está configurado para ejecutar los seeders de los módulos. No se realizaron cambios.");
+            return;
+        }
+
+        // Inyecta el use statement si no existe
+        if (!str_contains($seederContent, $useStatement)) {
+            $seederContent = str_replace(
+                "use Illuminate\\Database\\Seeder;",
+                "use Illuminate\\Database\\Seeder;\n{$useStatement}",
+                $seederContent
+            );
+        }
+        
+        // Inyecta la llamada si no existe
+        if (!str_contains($seederContent, $callLine)) {
+            $comment = "        // Código generado por LaravelModuleMaker para ejecutar los seeders de los módulos";
+            $seederContent = str_replace(
+                "public function run(): void\n    {\n",
+                "public function run(): void\n    {\n" . $comment . "\n" . $callLine . "\n",
+                $seederContent
+            );
+        }
+
+        File::put($seederPath, $seederContent);
+        $this->info("✅ Archivo DatabaseSeeder.php modificado para incluir los seeders de los módulos. ¡Revisa el archivo!");
     }
 }

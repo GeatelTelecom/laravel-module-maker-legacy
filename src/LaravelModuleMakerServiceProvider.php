@@ -9,26 +9,40 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Innodite\LaravelModuleMaker\Commands\MakeModuleCommand;
 use Innodite\LaravelModuleMaker\Commands\SetupModuleMakerCommand;
 use Illuminate\Support\Str;
+use Illuminate\Database\Seeder;
+use Innodite\LaravelModuleMaker\Database\Seeders\InnoditeModuleSeeder;
 
 class LaravelModuleMakerServiceProvider extends ServiceProvider
 {
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
     public function register(): void
     {
         $this->mergeConfigFrom(
             __DIR__.'/../config/make-module.php', 'make-module'
         );
+
+        // Vinculamos el seeder principal al contenedor de servicios.
+        $this->app->singleton('innodite.module_seeder', function ($app) {
+            $modulesPath = base_path('Modules');
+            $allModuleSeeders = [];
+
+            if (File::exists($modulesPath)) {
+                foreach (File::directories($modulesPath) as $modulePath) {
+                    $moduleName = basename($modulePath);
+                    $moduleName = Str::studly($moduleName);
+                    
+                    $seederClass = "Modules\\{$moduleName}\\Database\\Seeders\\{$moduleName}DatabaseSeeder";
+                    if (class_exists($seederClass)) {
+                        $allModuleSeeders[] = $seederClass;
+                    }
+                }
+            }
+
+            $seeder = new InnoditeModuleSeeder();
+            $seeder->setModuleSeeders($allModuleSeeders);
+            return $seeder;
+        });
     }
 
-    /**
-     * Boot the application events.
-     *
-     * @return void
-     */
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
@@ -47,47 +61,42 @@ class LaravelModuleMakerServiceProvider extends ServiceProvider
             $moduleName = basename($modulePath);
             $moduleName = Str::studly($moduleName);
 
-            // REGISTRO DEL SERVICE PROVIDER DEL MÓDULO
+            // REGISTRAR EL SERVICE PROVIDER DEL MÓDULO
             $providerClass = "Modules\\{$moduleName}\\Providers\\{$moduleName}ServiceProvider";
             if (class_exists($providerClass)) {
                 $this->app->register($providerClass);
             }
 
-            // Cargar todos los archivos de rutas sin definir namespace externo
-            //rutas sin definir namespace externo
+            // CARGAR RUTAS
             $routesPath = "{$modulePath}/routes";
             if (File::isDirectory($routesPath)) {
                 foreach (File::files($routesPath) as $routeFile) {
                     $filename = $routeFile->getFilename();
-                    
-                    // Determinar el middleware según el nombre del archivo
                     if ($filename === 'api.php') {
-                        Route::middleware('api')
-                            ->group(function () use ($routeFile) {
-                                require $routeFile->getPathname();
-                            });
+                        Route::middleware('api')->group(function () use ($routeFile) {
+                            require $routeFile->getPathname();
+                        });
                     } else {
-                        Route::middleware('web')
-                            ->group(function () use ($routeFile) {
-                                require $routeFile->getPathname();
-                            });
+                        Route::middleware('web')->group(function () use ($routeFile) {
+                            require $routeFile->getPathname();
+                        });
                     }
                 }
             }
 
-            // Vistas
+            // VISTAS
             $viewsPath = "{$modulePath}/resources/views";
             if (File::isDirectory($viewsPath)) {
                 $this->loadViewsFrom($viewsPath, Str::snake($moduleName));
             }
 
-            // Traducciones
+            // TRADUCCIONES
             $langPath = "{$modulePath}/resources/lang";
             if (File::isDirectory($langPath)) {
                 $this->loadTranslationsFrom($langPath, Str::snake($moduleName));
             }
 
-            // Migraciones
+            // MIGRACIONES
             $migrationsPath = "{$modulePath}/Database/Migrations";
             if (File::isDirectory($migrationsPath)) {
                 $this->loadMigrationsFrom($migrationsPath);

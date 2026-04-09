@@ -2,32 +2,21 @@
 
 ## Origen
 
-Este repositorio es una **instalación interna legacy** de `innodite/laravel-module-maker`, mantenida por GeatelTelecom como referencia histórica.
+Este repositorio es una **instalación interna legacy** de `innodite/laravel-module-maker`, mantenida por GeatelTelecom.
 
 - **Upstream original:** https://github.com/Innodite/laravel-module-maker
-- **Versión base:** `v1.0.1` (tag del 2025-08-07)
-- **Método de instalación:** descarga directa del ZIP del tag v1.0.1 (sin historial git del upstream)
+- **Versión base:** `v2.0.0` (tag del 2025-03-28)
+- **Método de instalación:** descarga directa del ZIP del tag v2.0.0 (sin historial git del upstream)
 - **Fecha de instalación:** 2026-04-09
 - **Instalado por:** GeatelTelecom
 
 ## Motivo
 
-Se preserva la versión legacy v1.0.1 como referencia para:
+Se preserva la versión v2.0.0 como referencia y soporte para:
 
-- Proyectos que aún operan con esta versión y no pueden migrar inmediatamente a v3.5.6
+- Proyectos que operan con esta versión y no pueden migrar inmediatamente a v3.5.6
 - Auditoría y comparación evolutiva del paquete
 - Rollback de emergencia si la versión moderna presenta incompatibilidades
-
-## Diferencias con la versión moderna (v3.5.6)
-
-La v1.0.1 es significativamente más simple:
-
-- **Sin sistema de contextos** (Central/Shared/Tenant no existía)
-- **Sin multi-tenancy** — generador de módulos básico
-- **Sin middleware** (InnoditeContextBridge no existía)
-- **Sin composables Vue 3** ni integración frontend
-- **Soporte Laravel:** ^10.0|^11.0|^12.0 (vs ^11.0|^12.0 en v3.5.6)
-- **Sin dependencias dev** (sin pest, testbench, phpcs)
 
 ## Cambios respecto al upstream
 
@@ -38,11 +27,10 @@ La v1.0.1 es significativamente más simple:
 
 ## Política de mantenimiento
 
-- **Congelado permanentemente** en v1.0.1. No se aplicarán parches ni actualizaciones.
+- **Congelado** en v2.0.0. No se aplicarán parches ni actualizaciones.
 - Para nuevos proyectos, usar `geateltelecom/laravel-module-maker` (v3.5.6+).
-- Este repositorio existe solo como referencia y soporte a proyectos legacy.
 
-## Uso en proyectos consumidores (solo legacy)
+## Uso en proyectos consumidores
 
 ```json
 {
@@ -53,14 +41,14 @@ La v1.0.1 es significativamente más simple:
         }
     ],
     "require": {
-        "geateltelecom/laravel-module-maker-legacy": "v1.0.1"
+        "geateltelecom/laravel-module-maker-legacy": "v2.0.0"
     }
 }
 ```
 
 ```bash
 composer remove innodite/laravel-module-maker
-composer require geateltelecom/laravel-module-maker-legacy:v1.0.1
+composer require geateltelecom/laravel-module-maker-legacy:v2.0.0
 ```
 
 ## Repositorio moderno

@@ -1,6 +1,6 @@
 {
     "name": "geateltelecom/laravel-module-maker-legacy",
-    "description": "Generador de módulos Laravel v1.0.1 — fork legacy mantenido por GeatelTelecom (origen: innodite/laravel-module-maker v1.0.1).",
+    "description": "Generador de módulos Laravel v2.0.0 — fork legacy mantenido por GeatelTelecom (origen: innodite/laravel-module-maker v2.0.0).",
     "type": "library",
     "license": "MIT",
     "authors": [

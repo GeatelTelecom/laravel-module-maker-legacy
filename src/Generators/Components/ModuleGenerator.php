@@ -6,7 +6,7 @@ namespace Innodite\LaravelModuleMaker\Generators\Components;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Innodite\LaravelModuleMaker\Generators\Components\ControllerGenerator;
-use Innodite\LaravelModuleMaker\Generators\Components\FactoryGenerator;
+use Innodite\LaravelModuleMaker\Generators\Components\Factory\FactoryGenerator;
 use Innodite\LaravelModuleMaker\Generators\Components\MigrationGenerator;
 use Innodite\LaravelModuleMaker\Generators\Components\ModelGenerator;
 use Innodite\LaravelModuleMaker\Generators\Components\ProviderGenerator;
@@ -103,7 +103,7 @@ class ModuleGenerator
         $repositoryName = "{$modelName}Repository";
         $requestName = "{$modelName}StoreRequest";
         $migrationName = $modelName;
-        $seederName = $modelName;
+        $seederName = "{$modelName}Seeder";
         $factoryName = $modelName;
         $testName = "{$modelName}Test";
 
@@ -147,26 +147,24 @@ class ModuleGenerator
         (new ProviderGenerator($this->moduleName, $this->modulePath, false, $this->moduleName, $components))->generate();
 
         foreach ($components as $component) {
-            $modelName = Str::studly($component['name']);
-            $controllerName = "{$modelName}Controller";
-            $serviceName = "{$modelName}Service";
-            $repositoryName = "{$modelName}Repository";
-            $requestName = "{$modelName}StoreRequest";
+            $modelName     = Str::studly($component['name']);
+            $requestName   = "{$modelName}StoreRequest";
             $migrationName = $modelName;
-            $seederName = $modelName;
-            $factoryName = $modelName;
-            $testName = "{$modelName}Test";
+            $seederName    = "{$modelName}Seeder";
+            $factoryName   = $modelName;
+            $testName      = "{$modelName}Test";
 
-            (new ModelGenerator($this->moduleName, $this->modulePath, false, $modelName, $component['attributes'] ?? [],$component['relations'] ?? []))->generate();
-            (new ControllerGenerator($this->moduleName, $this->modulePath, false, $controllerName, $modelName))->generate();
-            (new ServiceGenerator($this->moduleName, $this->modulePath, false, $serviceName, $modelName))->generate();
-            (new RepositoryGenerator($this->moduleName, $this->modulePath, false, $repositoryName, $modelName))->generate();
-            (new RequestGenerator($this->moduleName, $this->modulePath, false, $requestName))->generate();
-            (new MigrationGenerator($this->moduleName, $this->modulePath, false, $migrationName, $component['attributes'] ?? [], $component['indexes'] ?? []))->generate();
-            (new SeederGenerator($this->moduleName, $this->modulePath, false, $seederName))->generate();
-            (new FactoryGenerator($this->moduleName, $this->modulePath, false, $factoryName, $modelName))->generate();
-            (new TestGenerator($this->moduleName, $this->modulePath, false, $testName))->generate();
-            (new RouteGenerator($this->moduleName, $this->modulePath, false, $controllerName))->generate();
+            // componentConfig incluye 'context' y 'functionality' si están definidos en el JSON
+            (new ModelGenerator($this->moduleName, $this->modulePath, false, $modelName, $component['attributes'] ?? [], $component['relations'] ?? [], [], $component))->generate();
+            (new ControllerGenerator($this->moduleName, $this->modulePath, false, $modelName, $component))->generate();
+            (new ServiceGenerator($this->moduleName, $this->modulePath, false, $modelName, $component))->generate();
+            (new RepositoryGenerator($this->moduleName, $this->modulePath, false, $modelName, $component))->generate();
+            (new RequestGenerator($this->moduleName, $this->modulePath, false, $requestName, $component))->generate();
+            (new MigrationGenerator($this->moduleName, $this->modulePath, false, $migrationName, $component['attributes'] ?? [], $component['indexes'] ?? [], $component))->generate();
+            (new SeederGenerator($this->moduleName, $this->modulePath, false, $seederName, $component))->generate();
+            (new FactoryGenerator($this->moduleName, $this->modulePath, false, $factoryName, $modelName, $component))->generate();
+            (new TestGenerator($this->moduleName, $this->modulePath, false, $testName, $component))->generate();
+            (new RouteGenerator($this->moduleName, $this->modulePath, false, $modelName, $component))->generate();
         }
 
         if ($this->command) {
