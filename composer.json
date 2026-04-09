@@ -18,13 +18,13 @@
     ],
     "autoload": {
         "psr-4": {
-            "Innodite\LaravelModuleMaker\\": "src/"
+            "Innodite\\LaravelModuleMaker\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Innodite\LaravelModuleMaker\LaravelModuleMakerServiceProvider"
+                "Innodite\\LaravelModuleMaker\\LaravelModuleMakerServiceProvider"
             ]
         }
     },
